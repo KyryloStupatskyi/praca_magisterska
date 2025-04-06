@@ -9,7 +9,7 @@ async function start() {
 
     const app = await NestFactory.create(AppModule)
 
-    app.use(cookieParser())
+    app.use(cookieParser(COOKIE))
 
     await app.listen(PORT ?? 3000, () => {
       console.log(`Server is working on PORT ${3000}`)

@@ -2,7 +2,6 @@ import {
   BelongsToMany,
   Column,
   DataType,
-  HasMany,
   Model,
   Table,
 } from 'sequelize-typescript'
@@ -16,12 +15,20 @@ interface RolesRequiredAttr {
 
 @Table({ tableName: 'roles' })
 export class Roles extends Model<Roles, RolesRequiredAttr> {
+  @Column({
+    type: DataType.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false,
+  })
+  declare id: number
+
   @Column({ type: DataType.STRING, allowNull: false })
   declare value: string
 
   @Column({ type: DataType.STRING, allowNull: false })
   declare description: string
 
-  @BelongsToMany(() => Roles, () => User_Roles)
+  @BelongsToMany(() => User, () => User_Roles)
   users: User[]
 }

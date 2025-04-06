@@ -7,13 +7,13 @@ import { CreateRoleDto } from './dto/create-role.dto'
 export class RolesService {
   constructor(@InjectModel(Roles) private rolesModel: typeof Roles) {}
 
-  async createRole(roleDto: CreateRoleDto): Promise<Roles | HttpException> {
+  async createRole(roleDto: CreateRoleDto): Promise<Roles> {
     const checkIfRoleExist = await this.rolesModel.findOne({
       where: { value: roleDto.value },
     })
 
     if (checkIfRoleExist) {
-      return new HttpException(
+      throw new HttpException(
         'Role with this name already exists',
         HttpStatus.BAD_REQUEST
       )
@@ -24,11 +24,11 @@ export class RolesService {
     return role
   }
 
-  async getAllRoles(): Promise<Roles[] | HttpException> {
+  async getAllRoles(): Promise<Roles[]> {
     const roles = await this.rolesModel.findAll()
 
     if (roles.length === 0) {
-      return new HttpException(
+      throw new HttpException(
         'No roles yet, please create it first!',
         HttpStatus.NOT_FOUND
       )
@@ -37,11 +37,11 @@ export class RolesService {
     return roles
   }
 
-  async getRoleByValue(value: string): Promise<Roles | HttpException> {
+  async getRoleByValue(value: string): Promise<Roles> {
     const role = await this.rolesModel.findOne({ where: { value } })
 
     if (!role) {
-      return new HttpException('Role is not found', HttpStatus.NOT_FOUND)
+      throw new HttpException('Role is not found', HttpStatus.NOT_FOUND)
     }
 
     return role
