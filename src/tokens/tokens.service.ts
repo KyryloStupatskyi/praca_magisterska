@@ -12,11 +12,11 @@ export class TokensService {
 
   generateTokens(payload: TokenPayloadDto): GenerateJwtTokensTypes {
     const accessToken = this.jwtService.sign(payload, {
-      expiresIn: '30m',
+      expiresIn: '15s',
       secret: process.env.JWT_ACCESS_SECRET,
     })
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '30d',
+      expiresIn: '30s',
       secret: process.env.JWT_REFRESH_SECRET,
     })
 
@@ -26,8 +26,20 @@ export class TokensService {
     }
   }
 
-  validateToken(token: string): User {
-    return this.jwtService.verify(token)
+  validateToken(token: string): User | null {
+    try {
+      const user = this.jwtService.verify(token, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      })
+      return user
+    } catch (e) {
+      return null
+    }
+  }
+
+  async decodeToken(token: string): Promise<TokenPayloadDto> {
+    const decoded = this.jwtService.decode(token)
+    return decoded
   }
 
   async saveRefreshToken(
@@ -48,5 +60,11 @@ export class TokensService {
     })
 
     return data
+  }
+
+  async getToken(token: string): Promise<Tokens | null> {
+    const tokenDb = await Tokens.findOne({ where: { refreshToken: token } })
+
+    return tokenDb
   }
 }

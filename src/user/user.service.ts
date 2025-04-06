@@ -4,8 +4,6 @@ import { InjectModel } from '@nestjs/sequelize'
 import { User } from './user.model'
 import { RolesService } from 'src/roles/roles.service'
 import { RolesTypes } from 'src/types/role-types/roles.types'
-import { Roles } from 'src/roles/roles.model'
-import { log } from 'console'
 
 @Injectable()
 export class UserService {
@@ -57,5 +55,15 @@ export class UserService {
     }
 
     return users
+  }
+
+  async getUserById(id: number): Promise<User> {
+    const user = await this.userModel.findByPk(id, { include: { all: true } })
+
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND)
+    }
+
+    return user
   }
 }

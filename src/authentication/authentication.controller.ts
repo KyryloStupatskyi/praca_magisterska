@@ -1,6 +1,14 @@
-import { Body, Controller, HttpException, Post, Res } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { AuthenticationService } from './authentication.service'
-import { response, Response } from 'express'
+import { Request, Response } from 'express'
 import { CreateUserDto } from 'src/user/dto/create-user.dto'
 
 @Controller('authentication')
@@ -30,6 +38,30 @@ export class AuthenticationController {
     @Res({ passthrough: true }) response: Response
   ) {
     const tokens = await this.authService.login(authDto)
+
+    response.cookie('refreshToken', tokens.refreshToken, {
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      signed: true,
+    })
+
+    return {
+      accessToken: tokens.accessToken,
+    }
+  }
+
+  @Get('refresh')
+  async refresh(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response
+  ) {
+    const refreshToken = request.signedCookies.refreshToken
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('User not authorized')
+    }
+
+    const tokens = await this.authService.refresh(refreshToken)
 
     response.cookie('refreshToken', tokens.refreshToken, {
       maxAge: 30 * 24 * 60 * 60 * 1000,

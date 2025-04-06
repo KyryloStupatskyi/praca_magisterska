@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { UserService } from 'src/user/user.service'
 import { TokensService } from 'src/tokens/tokens.service'
 import { CreateUserDto } from 'src/user/dto/create-user.dto'
@@ -78,6 +83,31 @@ export class AuthenticationService {
         HttpStatus.UNAUTHORIZED
       )
     }
+
+    const tokenPayload = new TokenPayloadDto(userObj)
+
+    const tokens = this.tokensService.generateTokens({
+      ...tokenPayload,
+    })
+
+    await this.tokensService.saveRefreshToken({
+      userId: userObj.id,
+      refreshToken: tokens.refreshToken,
+    })
+
+    return tokens
+  }
+
+  async refresh(refreshToken: string) {
+    const validateToken = this.tokensService.validateToken(refreshToken)
+    const tokenDb = await this.tokensService.getToken(refreshToken)
+
+    if (!validateToken || !tokenDb) {
+      throw new HttpException('User is not authorized', HttpStatus.UNAUTHORIZED)
+    }
+
+    const user = await this.userService.getUserById(validateToken.id)
+    const userObj = user.get()
 
     const tokenPayload = new TokenPayloadDto(userObj)
 
