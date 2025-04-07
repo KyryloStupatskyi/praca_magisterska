@@ -122,4 +122,8 @@ export class AuthenticationService {
 
     return tokens
   }
+
+  async logout(refreshToken: string): Promise<void> {
+    await this.tokensService.removeToken(refreshToken)
+  }
 }

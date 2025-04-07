@@ -67,4 +67,12 @@ export class TokensService {
 
     return tokenDb
   }
+
+  async removeToken(token: string): Promise<void> {
+    const isDelete = await Tokens.destroy({ where: { refreshToken: token } })
+
+    if (isDelete === 0) {
+      throw new Error('Token not found')
+    }
+  }
 }

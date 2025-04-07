@@ -73,4 +73,27 @@ export class AuthenticationController {
       accessToken: tokens.accessToken,
     }
   }
+
+  @Post('logout')
+  async logout(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response
+  ) {
+    const refreshToken = request.signedCookies.refreshToken
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('User not authorized')
+    }
+
+    await this.authService.logout(refreshToken)
+
+    response.clearCookie('refreshToken', {
+      httpOnly: true,
+      signed: true,
+    })
+
+    return {
+      message: 'Logout successful',
+    }
+  }
 }
