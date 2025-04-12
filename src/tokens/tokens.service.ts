@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { GenerateJwtTokensTypes } from 'src/types/jwt-types/generate-jwt-tokens.types'
 import { User } from 'src/user/user.model'
 import { Tokens } from './tokens.model'
 import { TokenPayloadDto } from './dto/token-payload.dto'
 import { RefreshTokenRecordDto } from './dto/refresh-token-record.dto'
+import { GenerateJwtTokensTypes } from 'src/common/types/jwt-types/generate-jwt-tokens.types'
 
 @Injectable()
 export class TokensService {
@@ -12,11 +12,11 @@ export class TokensService {
 
   generateTokens(payload: TokenPayloadDto): GenerateJwtTokensTypes {
     const accessToken = this.jwtService.sign(payload, {
-      expiresIn: '15s',
+      expiresIn: '30m',
       secret: process.env.JWT_ACCESS_SECRET,
     })
     const refreshToken = this.jwtService.sign(payload, {
-      expiresIn: '30s',
+      expiresIn: '30d',
       secret: process.env.JWT_REFRESH_SECRET,
     })
 
