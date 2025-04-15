@@ -94,7 +94,7 @@ export class AuthenticationService {
   }
 
   async refresh(refreshToken: string) {
-    const validateToken = this.tokensService.validateToken(refreshToken)
+    const validateToken = this.tokensService.validateRefreshToken(refreshToken)
     const tokenDb = await this.tokensService.getToken(refreshToken)
 
     if (!validateToken || !tokenDb) {

@@ -19,6 +19,8 @@ import { LongpollingModule } from './longpolling/longpolling.module'
 import { LongpollingConnectionModule } from './longpolling-connection/longpolling-connection.module'
 import { UserMiddleware } from './common/midlewares/user.midleware'
 import { JwtModule } from '@nestjs/jwt'
+import { FriendsModule } from './friends/friends.module'
+import { Friends } from './friends/friends.model'
 
 @Module({
   imports: [
@@ -33,7 +35,7 @@ import { JwtModule } from '@nestjs/jwt'
       username: process.env.POSTGRES_USERNAME,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DATABASE,
-      models: [User, Roles, User_Roles, Tokens],
+      models: [User, Roles, User_Roles, Tokens, Friends],
       autoLoadModels: true,
       synchronize: true,
     }),
@@ -44,6 +46,7 @@ import { JwtModule } from '@nestjs/jwt'
     AuthenticationModule,
     LongpollingModule,
     LongpollingConnectionModule,
+    FriendsModule,
   ],
   controllers: [],
   providers: [UserMiddleware],

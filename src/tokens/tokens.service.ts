@@ -26,10 +26,21 @@ export class TokensService {
     }
   }
 
-  validateToken(token: string): User | null {
+  validateRefreshToken(token: string): User | null {
     try {
       const user = this.jwtService.verify(token, {
         secret: process.env.JWT_REFRESH_SECRET,
+      })
+      return user
+    } catch (e) {
+      return null
+    }
+  }
+
+  validateAccessToken(token: string): User | null {
+    try {
+      const user = this.jwtService.verify(token, {
+        secret: process.env.JWT_ACCESS_SECRET,
       })
       return user
     } catch (e) {
