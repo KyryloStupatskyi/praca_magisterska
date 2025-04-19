@@ -96,6 +96,9 @@ export class FriendsService {
           { reqToUserId: userId, status: FriendStatusEnum.ACCEPTED },
         ],
       },
+      include: {
+        all: true,
+      },
     })
 
     if (!friends) {

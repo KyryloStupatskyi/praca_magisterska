@@ -1,8 +1,18 @@
-import { Controller, Get, Patch, Post, Query, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common'
 import { FriendsService } from './friends.service'
 import { AuthGuard } from 'src/common/guards/isAuth.guard'
 import { UserDecorator } from 'src/common/decorators/getUser.decorator'
 import { TokenPayloadDto } from 'src/tokens/dto/token-payload.dto'
+import { FriendIdDto } from './dto/friendId.dto'
 
 @UseGuards(AuthGuard)
 @Controller('friends')
@@ -11,29 +21,29 @@ export class FriendsController {
 
   @Post('add-friend')
   async addFriend(
-    @Query() friendId: number,
+    @Body() friendId: FriendIdDto,
     @UserDecorator() user: TokenPayloadDto
   ) {
     const userId = user.id
-    return this.friendsService.addFriend(userId, friendId)
+    return this.friendsService.addFriend(userId, friendId.id)
   }
 
   @Patch('accept')
   async acceptFriendRequest(
-    @Query() friendId: number,
+    @Body() friendId: FriendIdDto,
     @UserDecorator() user: TokenPayloadDto
   ) {
     const userId = user.id
-    return this.friendsService.acceptFriendRequest(userId, friendId)
+    return this.friendsService.acceptFriendRequest(userId, friendId.id)
   }
 
   @Patch('reject')
   async rejectFriendRequest(
-    @Query() friendId: number,
+    @Body() friendId: FriendIdDto,
     @UserDecorator() user: TokenPayloadDto
   ) {
     const userId = user.id
-    return this.friendsService.rejectFriendRequest(userId, friendId)
+    return this.friendsService.rejectFriendRequest(userId, friendId.id)
   }
 
   @Get('get-requests')

@@ -32,7 +32,7 @@ export class Friends extends Model<Friends, FriendsRequiredAttr> {
   })
   declare status: FriendStatusEnum
 
-  @BelongsTo(() => User, 'reqToUserId')
+  @BelongsTo(() => User, 'reqFromUserId')
   requester: User
 
   @BelongsTo(() => User, 'reqToUserId')
