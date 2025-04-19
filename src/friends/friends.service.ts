@@ -3,10 +3,14 @@ import { Friends } from './friends.model'
 import { InjectModel } from '@nestjs/sequelize'
 import { FriendStatusEnum } from 'src/common/enums/friends-status.enum'
 import { Op } from 'sequelize'
+import { RoomsService } from 'src/rooms/rooms.service'
 
 @Injectable()
 export class FriendsService {
-  constructor(@InjectModel(Friends) private friendsModel: typeof Friends) {}
+  constructor(
+    @InjectModel(Friends) private friendsModel: typeof Friends,
+    private roomsService: RoomsService
+  ) {}
 
   async addFriend(userId: number, friendId: number): Promise<Friends> {
     if (friendId === userId) {
@@ -47,6 +51,7 @@ export class FriendsService {
     }
 
     friendRequest.status = FriendStatusEnum.ACCEPTED
+    await this.roomsService.createRoom(userId, friendId)
     return await friendRequest.save()
   }
 

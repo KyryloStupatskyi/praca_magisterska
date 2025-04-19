@@ -35,7 +35,6 @@ export class LongpollingConnectionService {
     )
 
     if (checkConnection && checkConnection.length) {
-      console.log('secondCheck')
       checkConnection.forEach((response) => {
         response.status(200).json({
           message: message,

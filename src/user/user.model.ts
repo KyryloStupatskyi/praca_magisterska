@@ -10,6 +10,8 @@ import {
 import { Friends } from 'src/friends/friends.model'
 import { Roles } from 'src/roles/roles.model'
 import { User_Roles } from 'src/roles/user-roles.model'
+import { Rooms_Users } from 'src/rooms/rooms-user.model'
+import { RoomsModel } from 'src/rooms/rooms.model'
 import { Tokens } from 'src/tokens/tokens.model'
 
 interface UserRequiredAttr {
@@ -47,4 +49,7 @@ export class User extends Model<User, UserRequiredAttr> {
 
   @HasMany(() => Friends, 'reqToUserId')
   receivedFriendRequests: Friends[]
+
+  @BelongsToMany(() => RoomsModel, () => Rooms_Users)
+  userRooms: RoomsModel[]
 }

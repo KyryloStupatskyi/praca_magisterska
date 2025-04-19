@@ -21,6 +21,9 @@ import { UserMiddleware } from './common/midlewares/user.midleware'
 import { JwtModule } from '@nestjs/jwt'
 import { FriendsModule } from './friends/friends.module'
 import { Friends } from './friends/friends.model'
+import { RoomsModule } from './rooms/rooms.module'
+import { RoomsModel } from './rooms/rooms.model'
+import { Rooms_Users } from './rooms/rooms-user.model'
 
 @Module({
   imports: [
@@ -35,7 +38,15 @@ import { Friends } from './friends/friends.model'
       username: process.env.POSTGRES_USERNAME,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DATABASE,
-      models: [User, Roles, User_Roles, Tokens, Friends],
+      models: [
+        User,
+        Roles,
+        User_Roles,
+        Tokens,
+        Friends,
+        RoomsModel,
+        Rooms_Users,
+      ],
       autoLoadModels: true,
       synchronize: true,
     }),
@@ -47,6 +58,7 @@ import { Friends } from './friends/friends.model'
     LongpollingModule,
     LongpollingConnectionModule,
     FriendsModule,
+    RoomsModule,
   ],
   controllers: [],
   providers: [UserMiddleware],

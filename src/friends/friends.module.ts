@@ -6,10 +6,15 @@ import { Friends } from './friends.model'
 import { User } from 'src/user/user.model'
 import { JwtModule } from '@nestjs/jwt'
 import { TokensModule } from 'src/tokens/tokens.module'
+import { RoomsModule } from 'src/rooms/rooms.module'
 
 @Module({
   controllers: [FriendsController],
   providers: [FriendsService],
-  imports: [SequelizeModule.forFeature([Friends, User]), TokensModule],
+  imports: [
+    SequelizeModule.forFeature([Friends, User]),
+    TokensModule,
+    RoomsModule,
+  ],
 })
 export class FriendsModule {}

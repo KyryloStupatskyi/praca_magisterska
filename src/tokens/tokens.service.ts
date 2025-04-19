@@ -33,7 +33,7 @@ export class TokensService {
       })
       return user
     } catch (e) {
-      return null
+      throw e
     }
   }
 
@@ -44,7 +44,7 @@ export class TokensService {
       })
       return user
     } catch (e) {
-      return null
+      throw e
     }
   }
 

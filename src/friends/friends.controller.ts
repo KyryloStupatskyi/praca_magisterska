@@ -24,8 +24,9 @@ export class FriendsController {
     @Body() friendId: FriendIdDto,
     @UserDecorator() user: TokenPayloadDto
   ) {
+    console.log(friendId)
     const userId = user.id
-    return this.friendsService.addFriend(userId, friendId.id)
+    return this.friendsService.addFriend(userId, friendId.friendId)
   }
 
   @Patch('accept')
@@ -34,7 +35,7 @@ export class FriendsController {
     @UserDecorator() user: TokenPayloadDto
   ) {
     const userId = user.id
-    return this.friendsService.acceptFriendRequest(userId, friendId.id)
+    return this.friendsService.acceptFriendRequest(userId, friendId.friendId)
   }
 
   @Patch('reject')
@@ -43,7 +44,7 @@ export class FriendsController {
     @UserDecorator() user: TokenPayloadDto
   ) {
     const userId = user.id
-    return this.friendsService.rejectFriendRequest(userId, friendId.id)
+    return this.friendsService.rejectFriendRequest(userId, friendId.friendId)
   }
 
   @Get('get-requests')
