@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import { CustomResponse } from 'src/common/types/customReponse/custom-response.types'
+import { Response } from 'express'
 
 @Injectable()
 export class LongpollingConnectionService {
-  private connections: Map<number, CustomResponse[]> = new Map()
+  private connections: Map<number, Response[]> = new Map()
 
-  createNewConnection(roomId: number, userResponse: CustomResponse): void {
-    const checkConnection: CustomResponse[] | undefined =
-      this.connections.get(roomId)
+  createNewConnection(roomId: number, userResponse: Response): void {
+    const checkConnection: Response[] | undefined = this.connections.get(roomId)
 
     if (checkConnection) {
       this.connections.set(roomId, [...checkConnection, userResponse])
@@ -16,23 +15,16 @@ export class LongpollingConnectionService {
     }
   }
 
-  deleteConnectionOne(roomId: number, userId?: number): void {
-    const checkConnection: CustomResponse[] | undefined =
-      this.connections.get(roomId)
+  deleteConnectionOne(roomId: number): void {
+    const checkConnection: Response[] | undefined = this.connections.get(roomId)
 
-    if (roomId && checkConnection) {
-      this.connections.set(
-        roomId,
-        checkConnection.filter((item) => item.id !== userId)
-      )
-    } else if (checkConnection) {
+    if (checkConnection) {
       this.connections.delete(roomId)
     }
   }
 
   sendMessagesToExistingConnections(roomId: number, message: string) {
-    const checkConnection: CustomResponse[] | undefined =
-      this.connections.get(roomId)
+    const checkConnection: Response[] | undefined = this.connections.get(roomId)
 
     if (checkConnection && checkConnection.length) {
       checkConnection.forEach((response) => {

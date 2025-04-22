@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common'
 import { OnEvent } from '@nestjs/event-emitter'
-import { CustomResponse } from 'src/common/types/customReponse/custom-response.types'
+import { Response } from 'express'
 import { LongpollingConnectionService } from 'src/longpolling-connection/longpolling-connection.service'
 
 @Injectable()
 export class LongpollingService {
   constructor(private lpConnection: LongpollingConnectionService) {}
 
-  createConnection(roomId: number, userResponse: CustomResponse): void {
+  createConnection(roomId: number, userResponse: Response): void {
     this.lpConnection.createNewConnection(roomId, userResponse)
   }
 
-  removeConnection(roomId: number, userId: number): void {
-    this.lpConnection.deleteConnectionOne(roomId, userId)
+  removeConnection(roomId: number): void {
+    this.lpConnection.deleteConnectionOne(roomId)
   }
 
   sendMessagesToConnections(roomId: number, message: string): void {
