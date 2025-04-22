@@ -7,20 +7,20 @@ import { LongpollingConnectionService } from 'src/longpolling-connection/longpol
 export class LongpollingService {
   constructor(private lpConnection: LongpollingConnectionService) {}
 
-  createConnection(id: string, response: CustomResponse): void {
-    this.lpConnection.createNewConnection(id, response)
+  createConnection(roomId: number, userResponse: CustomResponse): void {
+    this.lpConnection.createNewConnection(roomId, userResponse)
   }
 
-  removeConnection(id: string, responseId?: string): void {
-    this.lpConnection.deleteConnectionOne(id, responseId)
+  removeConnection(roomId: number, userId: number): void {
+    this.lpConnection.deleteConnectionOne(roomId, userId)
   }
 
-  sendMessagesToConnections(key: string, message: string): void {
-    return this.lpConnection.sendMessagesToExistingConnections(key, message)
+  sendMessagesToConnections(roomId: number, message: string): void {
+    return this.lpConnection.sendMessagesToExistingConnections(roomId, message)
   }
 
   @OnEvent('longpolling.sendMessage')
-  private notification(userId: string, message: string) {
-    return this.sendMessagesToConnections(userId, message)
+  private notification(roomId: number, message: string) {
+    return this.sendMessagesToConnections(roomId, message)
   }
 }
