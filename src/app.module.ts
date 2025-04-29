@@ -19,6 +19,8 @@ import { Friends } from './friends/friends.model'
 import { RoomsModule } from './rooms/rooms.module'
 import { RoomsModel } from './rooms/rooms.model'
 import { Rooms_Users } from './rooms/rooms-user.model'
+import { MessagesModule } from './messages/messages.module'
+import { MessagesModel } from './messages/messages.model'
 
 @Module({
   imports: [
@@ -41,6 +43,7 @@ import { Rooms_Users } from './rooms/rooms-user.model'
         Friends,
         RoomsModel,
         Rooms_Users,
+        MessagesModel,
       ],
       autoLoadModels: true,
       synchronize: true,
@@ -54,6 +57,7 @@ import { Rooms_Users } from './rooms/rooms-user.model'
     LongpollingConnectionModule,
     FriendsModule,
     RoomsModule,
+    MessagesModule,
   ],
   controllers: [],
   providers: [UserMiddleware],

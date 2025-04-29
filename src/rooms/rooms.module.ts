@@ -7,11 +7,12 @@ import { Rooms_Users } from './rooms-user.model'
 import { UserModule } from 'src/user/user.module'
 import { RoomsController } from './rooms.controller'
 import { TokensModule } from 'src/tokens/tokens.module'
+import { MessagesModel } from 'src/messages/messages.model'
 
 @Module({
   providers: [RoomsService],
   imports: [
-    SequelizeModule.forFeature([User, RoomsModel, Rooms_Users]),
+    SequelizeModule.forFeature([User, RoomsModel, Rooms_Users, MessagesModel]),
     UserModule,
     TokensModule,
   ],

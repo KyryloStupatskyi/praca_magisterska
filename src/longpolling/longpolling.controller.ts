@@ -17,7 +17,6 @@ export class LongpollingController {
   subscribe(
     @Req() request: Request,
     @Res() response: Response,
-    @UserDecorator() user: TokenPayloadDto,
     @Query('roomId') roomId: string
   ) {
     this.longpollingService.createConnection(+roomId, response)
@@ -28,11 +27,15 @@ export class LongpollingController {
   }
 
   @Post()
-  sendMessage(@Body() messageObj: SendMesssageDto) {
+  sendMessage(
+    @Body() messageObj: SendMesssageDto,
+    @UserDecorator() user: TokenPayloadDto
+  ) {
     this.eventEmitter.emit(
       'longpolling.sendMessage',
       messageObj.roomId,
-      messageObj.message
+      messageObj.message,
+      user.id
     )
     return {
       status: 'successfully sent message',

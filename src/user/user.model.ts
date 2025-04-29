@@ -8,6 +8,7 @@ import {
   Table,
 } from 'sequelize-typescript'
 import { Friends } from 'src/friends/friends.model'
+import { MessagesModel } from 'src/messages/messages.model'
 import { Roles } from 'src/roles/roles.model'
 import { User_Roles } from 'src/roles/user-roles.model'
 import { Rooms_Users } from 'src/rooms/rooms-user.model'
@@ -52,4 +53,7 @@ export class User extends Model<User, UserRequiredAttr> {
 
   @BelongsToMany(() => RoomsModel, () => Rooms_Users)
   userRooms: RoomsModel[]
+
+  @HasMany(() => MessagesModel)
+  messages: MessagesModel[]
 }
