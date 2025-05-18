@@ -28,6 +28,7 @@ export class MessagesService {
     return await this.messageModel.findAll({
       where: { roomId },
       include: { all: true },
+      order: [['createdAt', 'ASC']],
     })
   }
 }

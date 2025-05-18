@@ -21,6 +21,8 @@ import { RoomsModel } from './rooms/rooms.model'
 import { Rooms_Users } from './rooms/rooms-user.model'
 import { MessagesModule } from './messages/messages.module'
 import { MessagesModel } from './messages/messages.model'
+import { PrometheusModule } from '@willsoto/nestjs-prometheus'
+import { EventSourceModule } from './event-source/event-source.module';
 
 @Module({
   imports: [
@@ -48,7 +50,8 @@ import { MessagesModel } from './messages/messages.model'
       autoLoadModels: true,
       synchronize: true,
     }),
-    EventEmitterModule.forRoot({}),
+    EventEmitterModule.forRoot(),
+    PrometheusModule.register(),
     UserModule,
     RolesModule,
     TokensModule,
@@ -58,6 +61,7 @@ import { MessagesModel } from './messages/messages.model'
     FriendsModule,
     RoomsModule,
     MessagesModule,
+    EventSourceModule,
   ],
   controllers: [],
   providers: [UserMiddleware],

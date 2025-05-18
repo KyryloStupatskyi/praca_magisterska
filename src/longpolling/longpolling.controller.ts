@@ -5,6 +5,7 @@ import { LongpollingService } from './longpolling.service'
 import { TokenPayloadDto } from 'src/tokens/dto/token-payload.dto'
 import { EventEmitter2 } from '@nestjs/event-emitter'
 import { SendMesssageDto } from './dto/sendMessage.dto'
+import { CustomResponse } from 'src/common/types/customResponse.type'
 
 @Controller('longpolling')
 export class LongpollingController {
@@ -16,13 +17,13 @@ export class LongpollingController {
   @Get()
   subscribe(
     @Req() request: Request,
-    @Res() response: Response,
+    @Res() response: CustomResponse,
     @Query('roomId') roomId: string
   ) {
     this.longpollingService.createConnection(+roomId, response)
 
     request.on('close', () => {
-      this.longpollingService.removeConnection(+roomId)
+      this.longpollingService.removeConnection(+roomId, response.responseUserId)
     })
   }
 

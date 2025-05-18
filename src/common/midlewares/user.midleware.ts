@@ -1,4 +1,9 @@
-import { Injectable, NestMiddleware } from '@nestjs/common'
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NestMiddleware,
+} from '@nestjs/common'
 import { NextFunction, Request, Response } from 'express'
 import { JwtService } from '@nestjs/jwt'
 import { TokenPayloadDto } from 'src/tokens/dto/token-payload.dto'
@@ -6,24 +11,32 @@ import { TokenPayloadDto } from 'src/tokens/dto/token-payload.dto'
 @Injectable()
 export class UserMiddleware implements NestMiddleware {
   constructor(private readonly jwtService: JwtService) {}
-  use(request: Request, response: Response, next: NextFunction) {
-    const token: string | undefined =
-      request.headers.authorization?.split(' ')[1]
+  async use(request: Request, response: Response, next: NextFunction) {
+    try {
+      const token: string | undefined =
+        request.headers.authorization?.split(' ')[1]
 
-    if (!token) {
-      return response.status(401).json({ message: 'Unauthorized' })
+      if (!token) {
+        throw new HttpException('Unauthorize', HttpStatus.UNAUTHORIZED)
+      }
+
+      const decodedToken: TokenPayloadDto = await this.jwtService.verify(
+        token,
+        {
+          secret: process.env.JWT_ACCESS_SECRET,
+        }
+      )
+
+      if (!decodedToken) {
+        throw new HttpException('Unauthorize', HttpStatus.UNAUTHORIZED)
+      }
+
+      request['user'] = decodedToken
+      response['responseUserId'] = decodedToken.id
+
+      next()
+    } catch (error) {
+      next(new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED))
     }
-
-    const decodedToken: TokenPayloadDto = this.jwtService.verify(token, {
-      secret: process.env.JWT_ACCESS_SECRET,
-    })
-
-    if (!decodedToken) {
-      return response.status(401).json({ message: 'Unauthorized' })
-    }
-
-    request['user'] = decodedToken
-
-    next()
   }
 }

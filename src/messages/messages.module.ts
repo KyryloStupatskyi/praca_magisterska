@@ -5,9 +5,13 @@ import { SequelizeModule } from '@nestjs/sequelize'
 import { User } from 'src/user/user.model'
 import { MessagesModel } from './messages.model'
 import { RoomsModel } from 'src/rooms/rooms.model'
+import { TokensModule } from 'src/tokens/tokens.module'
 
 @Module({
-  imports: [SequelizeModule.forFeature([User, MessagesModel, RoomsModel])],
+  imports: [
+    SequelizeModule.forFeature([User, MessagesModel, RoomsModel]),
+    TokensModule,
+  ],
   controllers: [MessagesController],
   providers: [MessagesService],
   exports: [MessagesService],

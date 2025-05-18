@@ -34,11 +34,11 @@ export class MessagesModel extends Model<MessagesModel, MessagesRequiredAttr> {
 
   @ForeignKey(() => User)
   @Column({ type: DataType.INTEGER, allowNull: false })
-  messageSenderId: number
+  declare messageSenderId: number
 
   @ForeignKey(() => RoomsModel)
   @Column({ type: DataType.INTEGER, allowNull: false })
-  roomId: number
+  declare roomId: number
 
   @BelongsTo(() => User)
   sender: number

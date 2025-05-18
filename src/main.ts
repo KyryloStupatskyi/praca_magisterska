@@ -8,6 +8,10 @@ async function start() {
     const COOKIE = process.env.COOKIE_SECRET
 
     const app = await NestFactory.create(AppModule)
+    app.enableCors({
+      origin: process.env.CLIENT_URL,
+      credentials: true,
+    })
 
     app.use(cookieParser(COOKIE))
 

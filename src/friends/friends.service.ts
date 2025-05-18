@@ -4,33 +4,49 @@ import { InjectModel } from '@nestjs/sequelize'
 import { FriendStatusEnum } from 'src/common/enums/friends-status.enum'
 import { Op } from 'sequelize'
 import { RoomsService } from 'src/rooms/rooms.service'
+import { TokenPayloadDto } from 'src/tokens/dto/token-payload.dto'
+import { UserService } from 'src/user/user.service'
+import { User } from 'src/user/user.model'
 
 @Injectable()
 export class FriendsService {
   constructor(
     @InjectModel(Friends) private friendsModel: typeof Friends,
-    private roomsService: RoomsService
+    private roomsService: RoomsService,
+    private userService: UserService
   ) {}
 
-  async addFriend(userId: number, friendId: number): Promise<Friends> {
-    if (friendId === userId) {
+  async addFriend(
+    user: TokenPayloadDto,
+    friendEmail: string
+  ): Promise<Friends> {
+    if (user.email === friendEmail) {
       throw new Error('You cannot send a friend request to yourself')
+    }
+
+    const friendObj = await this.userService.getUserByEmail(friendEmail)
+
+    if (!friendObj) {
+      throw new HttpException('Friend not found', HttpStatus.NOT_FOUND)
     }
 
     const isFriendRequestExist = await this.friendsModel.findOne({
       where: {
-        reqToUserId: friendId,
-        reqFromUserId: userId,
+        reqToUserId: friendObj.id,
+        reqFromUserId: user.id,
       },
     })
 
     if (isFriendRequestExist) {
-      throw new Error('Friend request already exists')
+      throw new HttpException(
+        'Friend request already exist',
+        HttpStatus.CONFLICT
+      )
     }
 
     return this.friendsModel.create({
-      reqFromUserId: userId,
-      reqToUserId: friendId,
+      reqFromUserId: user.id,
+      reqToUserId: friendObj.id,
     })
   }
 

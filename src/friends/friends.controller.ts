@@ -21,30 +21,26 @@ export class FriendsController {
 
   @Post('add-friend')
   async addFriend(
-    @Body() friendId: FriendIdDto,
+    @Body() friendEmail: FriendIdDto,
     @UserDecorator() user: TokenPayloadDto
   ) {
-    console.log(friendId)
-    const userId = user.id
-    return this.friendsService.addFriend(userId, friendId.friendId)
+    return this.friendsService.addFriend(user, friendEmail.friendEmail)
   }
 
   @Patch('accept')
   async acceptFriendRequest(
-    @Body() friendId: FriendIdDto,
+    @Body() friendId: { friendId: number },
     @UserDecorator() user: TokenPayloadDto
   ) {
-    const userId = user.id
-    return this.friendsService.acceptFriendRequest(userId, friendId.friendId)
+    return this.friendsService.acceptFriendRequest(user.id, friendId.friendId)
   }
 
   @Patch('reject')
   async rejectFriendRequest(
-    @Body() friendId: FriendIdDto,
+    @Body() friendId: { friendId: number },
     @UserDecorator() user: TokenPayloadDto
   ) {
-    const userId = user.id
-    return this.friendsService.rejectFriendRequest(userId, friendId.friendId)
+    return this.friendsService.rejectFriendRequest(user.id, friendId.friendId)
   }
 
   @Get('get-requests')
