@@ -28,6 +28,8 @@ import { MessagesModule } from './messages/messages.module'
 import { MessagesModel } from './messages/messages.model'
 import { PrometheusModule } from '@willsoto/nestjs-prometheus'
 import { EventSourceModule } from './event-source/event-source.module'
+import { WebsocketConnectionGateway } from './websocket-connection/websocket-connection.gateway';
+import { WebsocketConnectionModule } from './websocket-connection/websocket-connection.module';
 
 @Module({
   imports: [
@@ -67,9 +69,10 @@ import { EventSourceModule } from './event-source/event-source.module'
     RoomsModule,
     MessagesModule,
     EventSourceModule,
+    WebsocketConnectionModule,
   ],
   controllers: [],
-  providers: [UserMiddleware],
+  providers: [UserMiddleware, WebsocketConnectionGateway],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
