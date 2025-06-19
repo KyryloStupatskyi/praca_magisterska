@@ -12,6 +12,10 @@ export class LongpollingService {
     private messagesService: MessagesService
   ) {}
 
+  getConnections() {
+    return this.lpConnection.getConnections()
+  }
+
   createConnection(roomId: number, userResponse: CustomResponse): void {
     this.lpConnection.createNewConnection(roomId, userResponse)
   }
@@ -26,12 +30,15 @@ export class LongpollingService {
 
   @OnEvent('longpolling.sendMessage')
   private async notification(roomId: number, message: string, userId: number) {
-    const createdMessage = await this.messagesService.saveMessage(
-      message,
-      userId,
-      roomId
-    )
-
-    return this.sendMessagesToConnections(roomId, createdMessage)
+    try {
+      const createdMessage = await this.messagesService.saveMessage(
+        message,
+        userId,
+        roomId
+      )
+      this.sendMessagesToConnections(roomId, createdMessage)
+    } catch (err) {
+      console.error('Failed to process message:', err)
+    }
   }
 }

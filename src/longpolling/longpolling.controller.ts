@@ -14,6 +14,11 @@ export class LongpollingController {
     private eventEmitter: EventEmitter2
   ) {}
 
+  @Get('connections')
+  getConnections() {
+    return this.longpollingService.getConnections()
+  }
+
   @Get()
   subscribe(
     @Req() request: Request,

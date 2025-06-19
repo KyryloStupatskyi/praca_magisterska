@@ -36,6 +36,7 @@ export class UserMiddleware implements NestMiddleware {
 
       next()
     } catch (error) {
+      console.log(error)
       next(new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED))
     }
   }

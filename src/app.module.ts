@@ -28,8 +28,8 @@ import { MessagesModule } from './messages/messages.module'
 import { MessagesModel } from './messages/messages.model'
 import { PrometheusModule } from '@willsoto/nestjs-prometheus'
 import { EventSourceModule } from './event-source/event-source.module'
-import { WebsocketConnectionGateway } from './websocket-connection/websocket-connection.gateway';
-import { WebsocketConnectionModule } from './websocket-connection/websocket-connection.module';
+import { WebsocketConnectionGateway } from './websocket-connection/websocket-connection.gateway'
+import { WebsocketConnectionModule } from './websocket-connection/websocket-connection.module'
 
 @Module({
   imports: [
@@ -38,6 +38,9 @@ import { WebsocketConnectionModule } from './websocket-connection/websocket-conn
     }),
     JwtModule.register({}),
     SequelizeModule.forRoot({
+      pool: {
+        acquire: 30000,
+      },
       dialect: 'postgres',
       host: process.env.POSTGRES_HOST,
       port: Number(process.env.POSTGRES_PORT),

@@ -7,6 +7,10 @@ import { MessagesModel } from 'src/messages/messages.model'
 export class LongpollingConnectionService {
   private connections: Map<number, CustomResponse[]> = new Map()
 
+  getConnections() {
+    return this.connections
+  }
+
   createNewConnection(roomId: number, userResponse: CustomResponse): void {
     const checkConnection: CustomResponse[] | undefined =
       this.connections.get(roomId)
