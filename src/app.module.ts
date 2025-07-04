@@ -30,6 +30,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus'
 import { EventSourceModule } from './event-source/event-source.module'
 import { WebsocketConnectionGateway } from './websocket-connection/websocket-connection.gateway'
 import { WebsocketConnectionModule } from './websocket-connection/websocket-connection.module'
+import { HealthModule } from './health/health.module'
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { WebsocketConnectionModule } from './websocket-connection/websocket-conn
     MessagesModule,
     EventSourceModule,
     WebsocketConnectionModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [UserMiddleware, WebsocketConnectionGateway],

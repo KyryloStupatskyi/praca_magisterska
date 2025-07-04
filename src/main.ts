@@ -16,7 +16,7 @@ async function start() {
     app.use(cookieParser(COOKIE))
 
     await app.listen(PORT ?? 3000, () => {
-      console.log(`Server is working on PORT ${3000}`)
+      console.log(`Server is working on PORT ${PORT}`)
     })
   } catch (error) {
     console.log(error)
