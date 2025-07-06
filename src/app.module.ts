@@ -31,6 +31,8 @@ import { EventSourceModule } from './event-source/event-source.module'
 import { WebsocketConnectionGateway } from './websocket-connection/websocket-connection.gateway'
 import { WebsocketConnectionModule } from './websocket-connection/websocket-connection.module'
 import { HealthModule } from './health/health.module'
+import { RedisModule } from './redis/redis.module'
+import { ScheduleModule } from '@nestjs/schedule'
 
 @Module({
   imports: [
@@ -62,6 +64,7 @@ import { HealthModule } from './health/health.module'
       synchronize: true,
     }),
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     PrometheusModule.register(),
     UserModule,
     RolesModule,
@@ -75,6 +78,7 @@ import { HealthModule } from './health/health.module'
     EventSourceModule,
     WebsocketConnectionModule,
     HealthModule,
+    RedisModule,
   ],
   controllers: [],
   providers: [UserMiddleware, WebsocketConnectionGateway],
