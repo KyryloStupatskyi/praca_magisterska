@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/sequelize'
 import { MessagesModel } from './messages.model'
+import { RedisAllMessagesDto } from 'src/redis/dto/redis-messages.dto'
 
 @Injectable()
 export class MessagesService {
@@ -30,5 +31,25 @@ export class MessagesService {
       include: { all: true },
       order: [['createdAt', 'ASC']],
     })
+  }
+
+  async bulkSaveMessages(
+    messages: RedisAllMessagesDto[]
+  ): Promise<MessagesModel[]> {
+    try {
+      const sanitizedMessages = messages.map(({ templateId, ...rest }) => rest)
+      const savedmessages =
+        await this.messageModel.bulkCreate(sanitizedMessages)
+
+      if (!savedmessages)
+        throw new HttpException(
+          'Failed to save messages',
+          HttpStatus.BAD_REQUEST
+        )
+
+      return savedmessages
+    } catch (error) {
+      throw new HttpException('Failed to save messages', HttpStatus.BAD_REQUEST)
+    }
   }
 }

@@ -14,6 +14,8 @@ interface MessagesRequiredAttr {
   messageSenderId: number
   roomId: number
   isReaded?: boolean
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 @Table({ tableName: 'messages' })

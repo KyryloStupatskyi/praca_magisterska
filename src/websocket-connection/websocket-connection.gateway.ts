@@ -13,6 +13,9 @@ import { WssSendMessageDto } from './dto/wss-send-message.dto'
 import { MessagesService } from 'src/messages/messages.service'
 import { UseGuards } from '@nestjs/common'
 import { WssAuthGuard } from 'src/common/guards/wss.-isAuth.guard'
+import { RedisAllMessagesDto } from 'src/redis/dto/redis-messages.dto'
+import { RedisService } from 'src/redis/redis.service'
+import uuid from 'uuid'
 
 @UseGuards(WssAuthGuard)
 @WebSocketGateway({
@@ -21,7 +24,10 @@ import { WssAuthGuard } from 'src/common/guards/wss.-isAuth.guard'
 export class WebsocketConnectionGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(private messagesService: MessagesService) {}
+  constructor(
+    private messagesService: MessagesService,
+    private redisService: RedisService
+  ) {}
 
   @WebSocketServer()
   server: Server
@@ -63,5 +69,45 @@ export class WebsocketConnectionGateway
       .emit('recieve-message', {
         message: createdMessage,
       })
+  }
+
+  @SubscribeMessage('send-template-message')
+  async sendTemplateMessage(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody() wssSendMessageDto: WssSendMessageDto
+  ) {
+    const tempMessageId = uuid.v4()
+
+    const tempMessagesObj = {
+      templateId: tempMessageId,
+      message: wssSendMessageDto.message,
+      roomId: wssSendMessageDto.roomId,
+      messageSenderId: socket.data.user.id,
+      createdAt: new Date(),
+      updateAt: new Date(),
+      status: 'template' as const,
+    }
+
+    this.server.emit('recieve-template-message', {
+      messageObj: tempMessagesObj,
+    })
+
+    await this.redisService.addToRedis(tempMessagesObj)
+  }
+
+  sendOriginalMessages(
+    allMessagesArr: RedisAllMessagesDto[],
+    uniqueRoomsArr: number[]
+  ) {
+    uniqueRoomsArr.forEach((roomId) => {
+      const messagesForRoom = allMessagesArr.filter(
+        (item) => item.roomId === roomId
+      )
+
+      this.server.to(roomId.toString()).emit('recieve-original-messages', {
+        messages: messagesForRoom,
+        status: 'original',
+      })
+    })
   }
 }

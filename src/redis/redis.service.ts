@@ -1,68 +1,61 @@
 import { InjectRedis } from '@nestjs-modules/ioredis'
 import { Injectable } from '@nestjs/common'
 import Redis from 'ioredis'
-import { RequestMessageDto } from 'src/messages/dto/request-message.dto'
+import { RedisAllMessagesDto } from './dto/redis-messages.dto'
 
 @Injectable()
 export class RedisService {
   constructor(@InjectRedis() private readonly redis: Redis) {}
 
-  async set(messageObj: RequestMessageDto): Promise<void> {
-    await this.redis.set(
-      messageObj.roomId.toString(),
-      JSON.stringify(messageObj),
-      'EX',
-      30
-    )
+  async addToRedis(messageObj: RedisAllMessagesDto): Promise<void> {
+    const key = `room:${messageObj.roomId}`
+
+    await this.redis.lpush(key, JSON.stringify(messageObj))
+
+    const redisTtl = await this.redis.ttl(key)
+
+    if (redisTtl === -1) await this.redis.expire(key, 30)
   }
 
-  async getMessageByRoomId(roomId: number): Promise<string | null> {
-    const stringMessage = await this.redis.get(roomId.toString())
-    if (stringMessage) {
-      return JSON.parse(stringMessage)
-    }
+  async getMessagesToOneRoom(roomId: number): Promise<string[] | null> {
+    const messages = await this.redis.lrange(`room:${roomId}`, 0, -1)
 
-    return null
+    if (messages.length === 0) return null
+
+    return messages.map((item) => JSON.parse(item))
   }
 
-  async getAllUsersMessages(): Promise<string[] | undefined> {
-    let cursos = '0'
-    let keys: string[] = []
-    let messages: string[] = []
-
-    do {
-      const [newCursor, elements] = await this.redis.scan(
-        cursos,
-        'MATCH',
-        'user:*',
-        'COUNT',
-        100
-      )
-      cursos = newCursor
-      keys.push(...elements)
-    } while (cursos !== '0')
-
-    if (keys.length === 0) return []
+  async getAllRedisMessages(): Promise<
+    Record<string, RedisAllMessagesDto[]> | undefined
+  > {
+    const messages: Record<string, RedisAllMessagesDto[]> = {}
 
     const redisPipline = this.redis.pipeline()
+    const keys = await this.redis.keys('room:*')
 
-    keys.forEach((key) => {
-      redisPipline.get(key)
+    if (keys.length === 0) return {}
+
+    keys.forEach((item) => {
+      redisPipline.lrange(item, 0, -1)
     })
 
-    const result = await redisPipline.exec()
+    const results = await redisPipline.exec()
 
-    if (result?.length === 0 || result === null) return []
+    if (results === null || results.length === 0) return {}
 
-    for (const [error, value] of result) {
+    results.forEach(([error, result], index) => {
       if (error) {
-        throw new Error('Error fetching messages from Redis')
+        console.log(
+          `Error fetching messages for ${keys[index]}:`,
+          error.message
+        )
+        messages[keys[index]] = []
+      } else {
+        messages[keys[index]] = (result as string[]).map((item) =>
+          JSON.parse(item)
+        )
       }
-
-      if (typeof value === 'string') {
-        messages.push(value)
-      }
-    }
+    })
 
     return messages
   }
