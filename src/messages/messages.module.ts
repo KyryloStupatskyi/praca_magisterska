@@ -7,15 +7,18 @@ import { MessagesModel } from './messages.model'
 import { RoomsModel } from 'src/rooms/rooms.model'
 import { TokensModule } from 'src/tokens/tokens.module'
 import { RedisModule } from 'src/redis/redis.module'
+import { MessagesCron } from './messages.cron'
+import { WebsocketConnectionModule } from 'src/websocket-connection/websocket-connection.module'
 
 @Module({
   imports: [
     SequelizeModule.forFeature([User, MessagesModel, RoomsModel]),
     TokensModule,
     RedisModule,
+    WebsocketConnectionModule,
   ],
   controllers: [MessagesController],
-  providers: [MessagesService],
+  providers: [MessagesService, MessagesCron],
   exports: [MessagesService],
 })
 export class MessagesModule {}

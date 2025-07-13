@@ -1,11 +1,13 @@
 import { InjectRedis } from '@nestjs-modules/ioredis'
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import Redis from 'ioredis'
 import { RedisAllMessagesDto } from './dto/redis-messages.dto'
 
 @Injectable()
 export class RedisService {
   constructor(@InjectRedis() private readonly redis: Redis) {}
+
+  private readonly logger = new Logger(RedisService.name)
 
   async addToRedis(messageObj: RedisAllMessagesDto): Promise<void> {
     const key = `room:${messageObj.roomId}`
@@ -28,35 +30,40 @@ export class RedisService {
   async getAllRedisMessages(): Promise<
     Record<string, RedisAllMessagesDto[]> | undefined
   > {
-    const messages: Record<string, RedisAllMessagesDto[]> = {}
+    try {
+      const messages: Record<string, RedisAllMessagesDto[]> = {}
 
-    const redisPipline = this.redis.pipeline()
-    const keys = await this.redis.keys('room:*')
+      const redisPipline = this.redis.pipeline()
+      const keys = await this.redis.keys('room:*')
 
-    if (keys.length === 0) return {}
+      if (keys.length === 0) return undefined
 
-    keys.forEach((item) => {
-      redisPipline.lrange(item, 0, -1)
-    })
+      keys.forEach((item) => {
+        redisPipline.lrange(item, 0, -1)
+      })
 
-    const results = await redisPipline.exec()
+      const results = await redisPipline.exec()
 
-    if (results === null || results.length === 0) return {}
+      if (results === null || results.length === 0) return {}
 
-    results.forEach(([error, result], index) => {
-      if (error) {
-        console.log(
-          `Error fetching messages for ${keys[index]}:`,
-          error.message
-        )
-        messages[keys[index]] = []
-      } else {
-        messages[keys[index]] = (result as string[]).map((item) =>
-          JSON.parse(item)
-        )
-      }
-    })
+      results.forEach(([error, result], index) => {
+        if (error) {
+          console.log(
+            `Error fetching messages for ${keys[index]}:`,
+            error.message
+          )
+          messages[keys[index]] = []
+        } else {
+          messages[keys[index]] = (result as string[]).map((item) =>
+            JSON.parse(item)
+          )
+        }
+      })
 
-    return messages
+      return messages
+    } catch (error) {
+      console.error('Error fetching all messages from Redis:', error)
+      return undefined
+    }
   }
 }

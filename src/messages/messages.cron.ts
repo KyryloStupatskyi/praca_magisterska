@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { Cron } from '@nestjs/schedule'
 import { MessagesService } from './messages.service'
 import { RedisService } from 'src/redis/redis.service'
@@ -6,6 +6,7 @@ import { WebsocketConnectionGateway } from 'src/websocket-connection/websocket-c
 
 @Injectable()
 export class MessagesCron {
+  private readonly logger = new Logger(MessagesCron.name)
   constructor(
     private messagesService: MessagesService,
     private redisService: RedisService,
@@ -17,8 +18,10 @@ export class MessagesCron {
   async saveMessagesToDataBase() {
     try {
       const messagesFromRedis = await this.redisService.getAllRedisMessages()
-      if (messagesFromRedis === undefined)
-        return console.warn('Nothing to save to database!')
+
+      if (messagesFromRedis === undefined) {
+        return this.logger.debug('No messages found in Redis, waiting...')
+      }
 
       const restoredArray = Object.values(messagesFromRedis).flat()
 
