@@ -10,12 +10,12 @@ import {
 import { Server, Socket } from 'socket.io'
 import { WssJoinRoomDto } from './dto/wss-join-room.dto'
 import { WssSendMessageDto } from './dto/wss-send-message.dto'
-import { MessagesService } from 'src/messages/messages.service'
 import { UseGuards } from '@nestjs/common'
 import { WssAuthGuard } from 'src/common/guards/wss.isAuth.guard'
 import { RedisAllMessagesDto } from 'src/redis/dto/redis-messages.dto'
 import { RedisService } from 'src/redis/redis.service'
-import uuid from 'uuid'
+import { v4 as uuidv4 } from 'uuid'
+import { MessagesModel } from 'src/messages/messages.model'
 
 @UseGuards(WssAuthGuard)
 @WebSocketGateway({
@@ -24,16 +24,13 @@ import uuid from 'uuid'
 export class WebsocketConnectionGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(
-    private messagesService: MessagesService,
-    private redisService: RedisService
-  ) {}
+  constructor(private redisService: RedisService) {}
 
   @WebSocketServer()
   server: Server
 
   handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`)
+    console.log(`Client connected: ${client.id} ${client.handshake.address}`)
   }
 
   handleDisconnect(client: Socket) {
@@ -53,30 +50,12 @@ export class WebsocketConnectionGateway
     })
   }
 
-  @SubscribeMessage('send-message')
-  async sendMessages(
-    @ConnectedSocket() socket: Socket,
-    @MessageBody() wssSendMessageDto: WssSendMessageDto
-  ) {
-    const createdMessage = await this.messagesService.saveMessage(
-      wssSendMessageDto.message,
-      socket.data.user.id,
-      wssSendMessageDto.roomId
-    )
-
-    this.server
-      .to(wssSendMessageDto.roomId.toString())
-      .emit('recieve-message', {
-        message: createdMessage,
-      })
-  }
-
   @SubscribeMessage('send-template-message')
   async sendTemplateMessage(
     @ConnectedSocket() socket: Socket,
     @MessageBody() wssSendMessageDto: WssSendMessageDto
   ) {
-    const tempMessageId = uuid.v4()
+    const tempMessageId = uuidv4()
 
     const tempMessagesObj = {
       templateId: tempMessageId,
@@ -88,19 +67,21 @@ export class WebsocketConnectionGateway
       status: 'template' as const,
     }
 
-    this.server.emit('recieve-template-message', {
-      messageObj: tempMessagesObj,
-    })
+    this.server
+      .to(wssSendMessageDto.roomId.toString())
+      .emit('recieve-template-message', {
+        messageObj: tempMessagesObj,
+      })
 
     await this.redisService.addToRedis(tempMessagesObj)
   }
 
   sendOriginalMessages(
-    allMessagesArr: RedisAllMessagesDto[],
+    allMessagesArr: Promise<MessagesModel[]>,
     uniqueRoomsArr: number[]
   ) {
-    uniqueRoomsArr.forEach((roomId) => {
-      const messagesForRoom = allMessagesArr.filter(
+    uniqueRoomsArr.forEach(async (roomId) => {
+      const messagesForRoom = (await allMessagesArr).filter(
         (item) => item.roomId === roomId
       )
 

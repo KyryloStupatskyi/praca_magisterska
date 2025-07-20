@@ -28,17 +28,17 @@ export class LongpollingService {
     return this.lpConnection.sendMessagesToExistingConnections(roomId, message)
   }
 
-  @OnEvent('longpolling.sendMessage')
-  private async notification(roomId: number, message: string, userId: number) {
-    try {
-      const createdMessage = await this.messagesService.saveMessage(
-        message,
-        userId,
-        roomId
-      )
-      this.sendMessagesToConnections(roomId, createdMessage)
-    } catch (err) {
-      console.error('Failed to process message:', err)
-    }
-  }
+  // @OnEvent('longpolling.sendMessage')
+  // private async notification(roomId: number, message: string, userId: number) {
+  //   try {
+  //     const createdMessage = await this.messagesService.saveMessage(
+  //       message,
+  //       userId,
+  //       roomId
+  //     )
+  //     this.sendMessagesToConnections(roomId, createdMessage)
+  //   } catch (err) {
+  //     console.error('Failed to process message:', err)
+  //   }
+  // }
 }

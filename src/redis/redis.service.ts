@@ -9,8 +9,18 @@ export class RedisService {
 
   private readonly logger = new Logger(RedisService.name)
 
+  private toRedis = 0
+  private fromRedis = 0
+
+  async deleteRedisKey(key: string): Promise<void> {
+    await this.redis.del(key)
+  }
+
   async addToRedis(messageObj: RedisAllMessagesDto): Promise<void> {
     const key = `room:${messageObj.roomId}`
+
+    this.toRedis++
+    console.log(`Added to redis`, this.toRedis)
 
     await this.redis.lpush(key, JSON.stringify(messageObj))
 
@@ -54,9 +64,11 @@ export class RedisService {
           )
           messages[keys[index]] = []
         } else {
-          messages[keys[index]] = (result as string[]).map((item) =>
-            JSON.parse(item)
-          )
+          const parsed = (messages[keys[index]] = (result as string[]).map(
+            (item) => JSON.parse(item)
+          ))
+          this.fromRedis += parsed.length
+          console.log('------------------', this.fromRedis)
         }
       })
 

@@ -5,5 +5,4 @@ export class RedisAllMessagesDto {
   readonly messageSenderId: number
   readonly createdAt: Date
   readonly updateAt: Date
-  readonly status: 'template' | 'original'
 }

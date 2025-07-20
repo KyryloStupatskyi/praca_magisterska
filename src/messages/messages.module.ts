@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { forwardRef, Module } from '@nestjs/common'
 import { MessagesController } from './messages.controller'
 import { MessagesService } from './messages.service'
 import { SequelizeModule } from '@nestjs/sequelize'
@@ -15,7 +15,7 @@ import { WebsocketConnectionModule } from 'src/websocket-connection/websocket-co
     SequelizeModule.forFeature([User, MessagesModel, RoomsModel]),
     TokensModule,
     RedisModule,
-    WebsocketConnectionModule,
+    forwardRef(() => WebsocketConnectionModule),
   ],
   controllers: [MessagesController],
   providers: [MessagesService, MessagesCron],

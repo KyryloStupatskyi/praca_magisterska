@@ -13,6 +13,7 @@ interface MessagesRequiredAttr {
   message: string
   messageSenderId: number
   roomId: number
+  templateId: string
   isReaded?: boolean
   createdAt?: Date
   updatedAt?: Date
@@ -33,6 +34,9 @@ export class MessagesModel extends Model<MessagesModel, MessagesRequiredAttr> {
 
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   declare isReaded: boolean
+
+  @Column({ type: DataType.STRING })
+  declare templateId: string
 
   @ForeignKey(() => User)
   @Column({ type: DataType.INTEGER, allowNull: false })

@@ -25,12 +25,16 @@ export class MessagesCron {
 
       const restoredArray = Object.values(messagesFromRedis).flat()
 
-      this.messagesService.bulkSaveMessages(restoredArray)
+      const messages = this.messagesService.bulkSaveMessages(restoredArray)
 
       const uniqueRoomsId = [
         ...new Set(restoredArray.map((item) => item.roomId)),
       ]
-      this.wssGateway.sendOriginalMessages(restoredArray, uniqueRoomsId)
+      this.wssGateway.sendOriginalMessages(messages, uniqueRoomsId)
+
+      for (const key of Object.keys(messagesFromRedis)) {
+        await this.redisService.deleteRedisKey(key)
+      }
     } catch (error) {
       console.error(
         'Something went wrong while saving messages to database:',

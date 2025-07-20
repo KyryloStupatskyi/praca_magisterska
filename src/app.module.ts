@@ -28,7 +28,6 @@ import { MessagesModule } from './messages/messages.module'
 import { MessagesModel } from './messages/messages.model'
 import { PrometheusModule } from '@willsoto/nestjs-prometheus'
 import { EventSourceModule } from './event-source/event-source.module'
-import { WebsocketConnectionGateway } from './websocket-connection/websocket-connection.gateway'
 import { WebsocketConnectionModule } from './websocket-connection/websocket-connection.module'
 import { HealthModule } from './health/health.module'
 import { RedisModule } from './redis/redis.module'
@@ -81,7 +80,7 @@ import { ScheduleModule } from '@nestjs/schedule'
     RedisModule,
   ],
   controllers: [],
-  providers: [UserMiddleware, WebsocketConnectionGateway],
+  providers: [UserMiddleware],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

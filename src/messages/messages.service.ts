@@ -9,21 +9,21 @@ export class MessagesService {
     @InjectModel(MessagesModel) private messageModel: typeof MessagesModel
   ) {}
 
-  async saveMessage(
-    message: string,
-    messageSenderId: number,
-    roomId: number
-  ): Promise<MessagesModel> {
-    try {
-      return await this.messageModel.create({
-        message,
-        messageSenderId,
-        roomId,
-      })
-    } catch (err) {
-      throw new HttpException(err.message, HttpStatus.BAD_REQUEST)
-    }
-  }
+  // async saveMessage(
+  //   message: string,
+  //   messageSenderId: number,
+  //   roomId: number
+  // ): Promise<MessagesModel> {
+  //   try {
+  //     return await this.messageModel.create({
+  //       message,
+  //       messageSenderId,
+  //       roomId,
+  //     })
+  //   } catch (err) {
+  //     throw new HttpException(err.message, HttpStatus.BAD_REQUEST)
+  //   }
+  // }
 
   async getMessages(roomId: number): Promise<MessagesModel[]> {
     return await this.messageModel.findAll({
@@ -37,9 +37,7 @@ export class MessagesService {
     messages: RedisAllMessagesDto[]
   ): Promise<MessagesModel[]> {
     try {
-      const sanitizedMessages = messages.map(({ templateId, ...rest }) => rest)
-      const savedmessages =
-        await this.messageModel.bulkCreate(sanitizedMessages)
+      const savedmessages = await this.messageModel.bulkCreate(messages)
 
       if (!savedmessages)
         throw new HttpException(

@@ -60,18 +60,18 @@ export class EventSourceService {
     this.addNewConnection(+roomId, userResponse)
   }
 
-  @OnEvent('event-source.sendMessage')
-  private async sendMessagesToRooms(
-    roomId: number,
-    message: string,
-    userId: number
-  ) {
-    const createdMessage = await this.messageService.saveMessage(
-      message,
-      userId,
-      roomId
-    )
+  // @OnEvent('event-source.sendMessage')
+  // private async sendMessagesToRooms(
+  //   roomId: number,
+  //   message: string,
+  //   userId: number
+  // ) {
+  //   const createdMessage = await this.messageService.saveMessage(
+  //     message,
+  //     userId,
+  //     roomId
+  //   )
 
-    return this.sendMessagesToExistingConnections(roomId, createdMessage)
-  }
+  //   return this.sendMessagesToExistingConnections(roomId, createdMessage)
+  // }
 }
