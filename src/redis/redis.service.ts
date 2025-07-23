@@ -9,73 +9,64 @@ export class RedisService {
 
   private readonly logger = new Logger(RedisService.name)
 
-  private toRedis = 0
-  private fromRedis = 0
-
-  async deleteRedisKey(key: string): Promise<void> {
-    await this.redis.del(key)
-  }
-
   async addToRedis(messageObj: RedisAllMessagesDto): Promise<void> {
     const key = `room:${messageObj.roomId}`
-
-    this.toRedis++
-    console.log(`Added to redis`, this.toRedis)
-
     await this.redis.lpush(key, JSON.stringify(messageObj))
 
-    const redisTtl = await this.redis.ttl(key)
+    // U should to test it, i mean the time, when messsages can die in Redis
 
-    if (redisTtl === -1) await this.redis.expire(key, 30)
+    // const ttl = await this.redis.ttl(key)
+    // if (ttl === -1) {
+    //   await this.redis.expire(key, 30) // ключ живет 30 сек без обновлений
+    // }
   }
 
-  async getMessagesToOneRoom(roomId: number): Promise<string[] | null> {
-    const messages = await this.redis.lrange(`room:${roomId}`, 0, -1)
+  async getAllMessagesToOneRoomAndClearKey(
+    roomId: number
+  ): Promise<RedisAllMessagesDto[]> {
+    const key = `room:${roomId}`
+    const pipeline = this.redis.pipeline()
 
-    if (messages.length === 0) return null
+    pipeline.lrange(key, 0, -1)
+    pipeline.ltrim(key, 1, 0)
 
-    return messages.map((item) => JSON.parse(item))
-  }
+    const execResult = await pipeline.exec()
 
-  async getAllRedisMessages(): Promise<
-    Record<string, RedisAllMessagesDto[]> | undefined
-  > {
-    try {
-      const messages: Record<string, RedisAllMessagesDto[]> = {}
-
-      const redisPipline = this.redis.pipeline()
-      const keys = await this.redis.keys('room:*')
-
-      if (keys.length === 0) return undefined
-
-      keys.forEach((item) => {
-        redisPipline.lrange(item, 0, -1)
-      })
-
-      const results = await redisPipline.exec()
-
-      if (results === null || results.length === 0) return {}
-
-      results.forEach(([error, result], index) => {
-        if (error) {
-          console.log(
-            `Error fetching messages for ${keys[index]}:`,
-            error.message
-          )
-          messages[keys[index]] = []
-        } else {
-          const parsed = (messages[keys[index]] = (result as string[]).map(
-            (item) => JSON.parse(item)
-          ))
-          this.fromRedis += parsed.length
-          console.log('------------------', this.fromRedis)
-        }
-      })
-
-      return messages
-    } catch (error) {
-      console.error('Error fetching all messages from Redis:', error)
-      return undefined
+    if (execResult === null) {
+      this.logger.error(`Pipeline failed for key ${key}`)
+      return []
     }
+
+    const [[lrangeError, lrangeResult], [errorTrim]] = execResult
+
+    if (lrangeError) {
+      this.logger.error(`Lrange error for ${key}: ${lrangeError.message}`)
+      return []
+    }
+
+    if (errorTrim) {
+      this.logger.error(`Ltrim error for ${key}: ${errorTrim.message}`)
+    }
+
+    if (!Array.isArray(lrangeResult) || lrangeResult.length === 0) return []
+
+    return lrangeResult.map((item: string) => JSON.parse(item))
+  }
+
+  async fetchAllRedisMessages(): Promise<
+    Record<number, RedisAllMessagesDto[]>
+  > {
+    const keys = await this.redis.keys('room:*')
+    const messagesByRoom: Record<number, RedisAllMessagesDto[]> = {}
+
+    for (const key of keys) {
+      const roomId = Number(key.split(':')[1])
+      const messages = await this.getAllMessagesToOneRoomAndClearKey(roomId)
+      if (messages.length > 0) {
+        messagesByRoom[roomId] = messages
+      }
+    }
+
+    return messagesByRoom
   }
 }

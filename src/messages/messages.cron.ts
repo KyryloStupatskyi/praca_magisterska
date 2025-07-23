@@ -7,39 +7,33 @@ import { WebsocketConnectionGateway } from 'src/websocket-connection/websocket-c
 @Injectable()
 export class MessagesCron {
   private readonly logger = new Logger(MessagesCron.name)
-  constructor(
-    private messagesService: MessagesService,
-    private redisService: RedisService,
-    private wssGateway: WebsocketConnectionGateway
-  ) {}
-  // Get messages from redis and save them to database every 5s
-  // * seconds * minutes * hours * dayOfMonth * month * dayOfWeek
-  @Cron('*/5 * * * * *')
-  async saveMessagesToDataBase() {
-    try {
-      const messagesFromRedis = await this.redisService.getAllRedisMessages()
 
-      if (messagesFromRedis === undefined) {
-        return this.logger.debug('No messages found in Redis, waiting...')
+  constructor(
+    private readonly messagesService: MessagesService,
+    private readonly redisService: RedisService,
+    private readonly wssGateway: WebsocketConnectionGateway
+  ) {}
+
+  // Каждый 2 минуты
+  @Cron('*/5 * * * * *')
+  async saveMessagesToDatabase() {
+    try {
+      const messagesFromRedis = await this.redisService.fetchAllRedisMessages()
+
+      if (!messagesFromRedis || Object.keys(messagesFromRedis).length === 0) {
+        this.logger.debug('No messages to save — waiting...')
+        return
       }
 
       const restoredArray = Object.values(messagesFromRedis).flat()
-
       const messages = this.messagesService.bulkSaveMessages(restoredArray)
 
-      const uniqueRoomsId = [
-        ...new Set(restoredArray.map((item) => item.roomId)),
-      ]
-      this.wssGateway.sendOriginalMessages(messages, uniqueRoomsId)
+      const uniqueRoomIds = [...new Set(restoredArray.map((msg) => msg.roomId))]
+      this.wssGateway.sendOriginalMessages(messages, uniqueRoomIds)
 
-      for (const key of Object.keys(messagesFromRedis)) {
-        await this.redisService.deleteRedisKey(key)
-      }
+      this.logger.log(`Saved ${restoredArray.length} messages to DB`)
     } catch (error) {
-      console.error(
-        'Something went wrong while saving messages to database:',
-        error
-      )
+      this.logger.error('Error while saving messages from Redis to DB:', error)
     }
   }
 }
