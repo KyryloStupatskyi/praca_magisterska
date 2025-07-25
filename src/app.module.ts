@@ -85,7 +85,7 @@ import { ScheduleModule } from '@nestjs/schedule'
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(UserMiddleware).forRoutes('longpolling', {
-      path: 'event-source',
+      path: 'event-source/send-template-message',
       method: RequestMethod.POST,
     })
   }

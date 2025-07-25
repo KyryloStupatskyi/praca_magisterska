@@ -35,12 +35,16 @@ export class EventSourceService {
     }
   }
 
-  sendMessagesToExistingConnections(roomId: number, message: MessagesModel) {
+  sendMessagesToExistingConnections(roomId: number, message: MessagesModel[]) {
     const checkConnection: CustomResponse[] | undefined =
       this.connections.get(roomId)
 
     if (checkConnection && checkConnection.length) {
-      const data = `data: ${JSON.stringify(message)} \n\n`
+      const payload = {
+        status: 'original',
+        message,
+      }
+      const data = `data: ${JSON.stringify(payload)} \n\n`
 
       checkConnection.forEach((response) => {
         response.write(data)
@@ -60,18 +64,21 @@ export class EventSourceService {
     this.addNewConnection(+roomId, userResponse)
   }
 
-  // @OnEvent('event-source.sendMessage')
-  // private async sendMessagesToRooms(
-  //   roomId: number,
-  //   message: string,
-  //   userId: number
-  // ) {
-  //   const createdMessage = await this.messageService.saveMessage(
-  //     message,
-  //     userId,
-  //     roomId
-  //   )
+  @OnEvent('event-source.sendOriginalMessages')
+  private async notification(
+    allMessagesArr: Promise<MessagesModel[]>,
+    uniqueRoomsArr: number[]
+  ) {
+    try {
+      uniqueRoomsArr.forEach(async (roomId) => {
+        const messagesForRoom = (await allMessagesArr).filter(
+          (item) => item.roomId === roomId
+        )
 
-  //   return this.sendMessagesToExistingConnections(roomId, createdMessage)
-  // }
+        this.sendMessagesToExistingConnections(roomId, messagesForRoom)
+      })
+    } catch (err) {
+      console.error('Failed to process message:', err)
+    }
+  }
 }

@@ -56,13 +56,13 @@ export class LongpollingConnectionService {
     }
   }
 
-  sendMessagesToExistingConnections(roomId: number, message: MessagesModel) {
+  sendMessagesToExistingConnections(roomId: number, message: MessagesModel[]) {
     const checkConnection: CustomResponse[] | undefined =
       this.connections.get(roomId)
 
     if (checkConnection && checkConnection.length) {
       checkConnection.forEach((response) => {
-        response.status(200).json({ message: message })
+        response.status(200).json({ message: message, status: 'original' })
         this.deleteConnectionOne(roomId, response.responseUserId)
       })
     }

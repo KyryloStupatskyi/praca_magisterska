@@ -4,19 +4,20 @@ const { parentPort, workerData } = require('worker_threads')
 const ROOM_ID = 1
 const BASE_URL = 'http://localhost:3001'
 const TOKEN =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJzdHVwYWNraWprQGdtYWlsLmNvbSIsInJvbGVzIjpbeyJpZCI6MSwidmFsdWUiOiJVU0VSIiwiZGVzY3JpcHRpb24iOiJzaW1wbGUgdXNlciwgY2FuIG1lc3NhZ2UgYW55b25lIiwiY3JlYXRlZEF0IjoiMjAyNS0wNy0wM1QyMjo0MjowMS45NTBaIiwidXBkYXRlZEF0IjoiMjAyNS0wNy0wM1QyMjo0MjowMS45NTBaIiwiVXNlcl9Sb2xlcyI6eyJ1c2VySWQiOjEsInJvbGVJZCI6MX19XSwiaWF0IjoxNzUxNTgzNjI3LCJleHAiOjE3NTE1ODU0Mjd9.894TJXVTyi6XGmluqJXVDLTXXhUJ8XdTK-PNgEo7890'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiZW1haWwiOiJxd2VydHlAZ21haWwuY29tIiwicm9sZXMiOlt7ImlkIjoxLCJ2YWx1ZSI6IlVTRVIiLCJkZXNjcmlwdGlvbiI6InNpbXBsZSB1c2VyLCBjYW4gbWVzc2FnZSBhbnlvbmUiLCJjcmVhdGVkQXQiOiIyMDI1LTA3LTE0VDA5OjA0OjIyLjQzOFoiLCJ1cGRhdGVkQXQiOiIyMDI1LTA3LTE0VDA5OjA0OjIyLjQzOFoiLCJVc2VyX1JvbGVzIjp7InVzZXJJZCI6Miwicm9sZUlkIjoxfX1dLCJpYXQiOjE3NTMyODQzMjMsImV4cCI6MTc1MzI5MDMyM30.r2Vq5kAV3iohRkBv013aQB9SnqZMunQNkSeiMvy9o6s'
 
 let timeoutErrorCount = 0
 let isStopped = false
+let totalMessagesSent = 0
 
 const instance = axios.create({
-  baseURL: 'http://localhost:3001',
+  baseURL: BASE_URL,
 })
 
 async function longpolling(clientId) {
   while (!isStopped) {
     try {
-      const response = await instance.get(BASE_URL + '/longpolling', {
+      const response = await instance.get('/longpolling', {
         params: { roomId: ROOM_ID },
         headers: {
           Authorization: `Bearer ${TOKEN}`,
@@ -50,7 +51,7 @@ async function sendMessages(senderId, messageCount) {
     try {
       const generatedMessage = `Message ${i + 1} from sender ${senderId}`
       await instance.post(
-        BASE_URL + '/longpolling',
+        '/longpolling/send-template-message',
         { roomId: ROOM_ID, message: generatedMessage },
         {
           headers: {
@@ -59,8 +60,9 @@ async function sendMessages(senderId, messageCount) {
           },
         }
       )
+      totalMessagesSent++
     } catch (err) {
-      parentPort.postMessage(`[Sender #${senderId}] error: ${err.message}`)
+      parentPort.postMessage(`[Sender #${senderId}] Error: ${err.message}`)
     }
 
     await new Promise((r) => setTimeout(r, 200))
@@ -70,33 +72,39 @@ async function sendMessages(senderId, messageCount) {
 ;(async () => {
   const startTime = Date.now()
 
+  // Запускаем всех longpolling клиентов и сохраняем Promises
+  const lpTasks = []
   for (let i = 1; i <= workerData.subs; i++) {
-    longpolling(i)
+    lpTasks.push(longpolling(i))
   }
 
+  // Небольшая пауза перед началом отправки
   await new Promise((r) => setTimeout(r, 2000))
 
-  const tasks = []
+  // Старт отправки сообщений
+  const sendTasks = []
   for (let i = 1; i <= workerData.subs; i++) {
-    tasks.push(sendMessages(i, workerData.messages))
+    sendTasks.push(sendMessages(i, workerData.messages))
   }
 
-  await Promise.allSettled(tasks)
+  await Promise.allSettled(sendTasks)
 
+  // Сигнал всем longpolling-потокам завершиться
   isStopped = true
+
+  // Даём longpoll'ам время на догрузку последних сообщений
+  await new Promise((r) => setTimeout(r, 2000))
 
   const endTime = Date.now()
   const executionTimeSeconds = ((endTime - startTime) / 1000).toFixed(2)
 
-  parentPort.postMessage(`[Thread #${workerData.id}] finished sending messages`)
   parentPort.postMessage(
-    `[Thread #${workerData.id}] Total timeout errors: ${timeoutErrorCount}`
+    `[Thread #${workerData.id}] Sent messages: ${totalMessagesSent}`
+  )
+  parentPort.postMessage(
+    `[Thread #${workerData.id}] Timeout errors: ${timeoutErrorCount}`
   )
   parentPort.postMessage(
     `[Thread #${workerData.id}] Execution time: ${executionTimeSeconds} seconds`
   )
-
-  console.log(timeoutErrorCount)
-
-  return 1
 })()

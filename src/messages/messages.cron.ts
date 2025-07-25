@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule'
 import { MessagesService } from './messages.service'
 import { RedisService } from 'src/redis/redis.service'
 import { WebsocketConnectionGateway } from 'src/websocket-connection/websocket-connection.gateway'
+import { EventEmitter2 } from '@nestjs/event-emitter'
 
 @Injectable()
 export class MessagesCron {
@@ -11,7 +12,8 @@ export class MessagesCron {
   constructor(
     private readonly messagesService: MessagesService,
     private readonly redisService: RedisService,
-    private readonly wssGateway: WebsocketConnectionGateway
+    private readonly wssGateway: WebsocketConnectionGateway,
+    private eventEmitter: EventEmitter2
   ) {}
 
   // Каждый 2 минуты
@@ -29,7 +31,19 @@ export class MessagesCron {
       const messages = this.messagesService.bulkSaveMessages(restoredArray)
 
       const uniqueRoomIds = [...new Set(restoredArray.map((msg) => msg.roomId))]
-      this.wssGateway.sendOriginalMessages(messages, uniqueRoomIds)
+      //this.wssGateway.sendOriginalMessages(messages, uniqueRoomIds)
+
+      this.eventEmitter.emit(
+        'event-source.sendOriginalMessages',
+        messages,
+        uniqueRoomIds
+      )
+
+      // this.eventEmitter.emit(
+      //   'longpolling.sendOriginalMessages',
+      //   messages,
+      //   uniqueRoomIds
+      // )
 
       this.logger.log(`Saved ${restoredArray.length} messages to DB`)
     } catch (error) {

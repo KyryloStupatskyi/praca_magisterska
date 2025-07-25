@@ -18,13 +18,16 @@ import { TokensService } from 'src/tokens/tokens.service'
 import { User } from 'src/user/user.model'
 import { UserDecorator } from 'src/common/decorators/getUser.decorator'
 import { TokenPayloadDto } from 'src/tokens/dto/token-payload.dto'
+import { v4 as uuidv4 } from 'uuid'
+import { RedisService } from 'src/redis/redis.service'
 
 @Controller('event-source')
 export class EventSourceController {
   constructor(
     private eventSourceService: EventSourceService,
     private eventEmitter: EventEmitter2,
-    private tokenService: TokensService
+    private tokenService: TokensService,
+    private redisService: RedisService
   ) {}
 
   @Get()
@@ -50,19 +53,27 @@ export class EventSourceController {
     }
   }
 
-  @Post()
-  sendMessage(
+  @Post('send-template-message')
+  async sendMessage(
     @Body() messageObj: SendMesssageDto,
     @UserDecorator() user: TokenPayloadDto
   ) {
-    this.eventEmitter.emit(
-      'event-source.sendMessage',
-      messageObj.roomId,
-      messageObj.message,
-      user.id
-    )
+    const tempMessageId = uuidv4()
+
+    const tempMessagesObj = {
+      templateId: tempMessageId,
+      message: messageObj.message,
+      roomId: messageObj.roomId,
+      messageSenderId: user.id,
+      createdAt: new Date(),
+      updateAt: new Date(),
+      status: 'template' as const,
+    }
+
+    await this.redisService.addToRedis(tempMessagesObj)
+
     return {
-      status: 'successfully sent message',
+      messageObj: tempMessagesObj,
     }
   }
 }
