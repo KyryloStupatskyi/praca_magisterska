@@ -6,7 +6,7 @@ import { RedisModule as RdModule } from '@nestjs-modules/ioredis'
   imports: [
     RdModule.forRoot({
       type: 'single',
-      url: 'redis://localhost:6379',
+      url: 'redis://redis:6379',
     }),
   ],
   providers: [RedisService],

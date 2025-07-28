@@ -76,7 +76,8 @@ import { ScheduleModule } from '@nestjs/schedule'
     MessagesModule,
     EventSourceModule,
     WebsocketConnectionModule,
-    HealthModule,
+    // This module is not working with docker, but still work on localhost
+    // HealthModule,
     RedisModule,
   ],
   controllers: [],

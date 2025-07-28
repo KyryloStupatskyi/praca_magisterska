@@ -16,6 +16,8 @@ export class HealthController {
   @Get()
   @HealthCheck()
   check(): Promise<HealthCheckResult> {
-    return this.health.check([async () => this.redis.isHealthy('redis')])
+    return this.health.check([
+      async () => this.redis.isHealthy('redis://redis:6379'),
+    ])
   }
 }

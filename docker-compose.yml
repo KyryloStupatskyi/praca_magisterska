@@ -1,0 +1,97 @@
+services:
+  back:
+    build: .
+    container_name: backend
+    ports:
+      - '3001:3001'
+    depends_on:
+      - postgresql
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - PORT=3001
+      - COOKIE_SECRET=some_cookie_secret
+      - POSTGRES_DIALECT=postgres
+      - POSTGRES_HOST=postgresql
+      - POSTGRES_PORT=5432
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DATABASE=praca_magisterska
+      - JWT_ACCESS_SECRET=some_secret_access_jwt_key
+      - JWT_REFRESH_SECRET=some_secret_refresh_jwt_key
+      - HASH_SALT_ROUNDS=5
+      - CLIENT_URL=http://localhost:5173
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  postgresql:
+    image: postgres:16
+    container_name: postgresql
+    restart: always
+    depends_on:
+      - redis
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=praca_magisterska
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro,Z
+      - prometheus_data:/prometheus
+    ports:
+      - '9090:9090'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=root
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - '3000:3000'
+    depends_on:
+      - prometheus
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - '9100:9100'
+    restart: unless-stopped
+    pid: 'host'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: blackbox-exporter
+    ports:
+      - '9115:9115'
+    volumes:
+      - ./blackbox.yml:/etc/blackbox_exporter/config.yml:ro,Z
+
+volumes:
+  pgdata:
+  redis_data:
+  prometheus_data:
+  grafana_data:
