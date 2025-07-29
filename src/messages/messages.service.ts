@@ -36,18 +36,28 @@ export class MessagesService {
   async bulkSaveMessages(
     messages: RedisAllMessagesDto[]
   ): Promise<MessagesModel[]> {
+    const CHUNK_SIZE = 2000
+
+    const allSavedMessages: MessagesModel[] = []
+
     try {
-      const savedmessages = await this.messageModel.bulkCreate(messages)
+      for (let i = 0; i < messages.length; i += CHUNK_SIZE) {
+        const chunk = messages.slice(i, i + CHUNK_SIZE)
 
-      if (!savedmessages)
-        throw new HttpException(
-          'Failed to save messages',
-          HttpStatus.BAD_REQUEST
-        )
+        const saved = await this.messageModel.bulkCreate(chunk)
 
-      return savedmessages
+        if (!saved || saved.length === 0) {
+          throw new Error(`Chunk ${i / CHUNK_SIZE} failed to save`)
+        }
+
+        allSavedMessages.push(...saved)
+      }
+
+      return allSavedMessages
     } catch (error) {
-      throw new HttpException('Failed to save messages', HttpStatus.BAD_REQUEST)
+      throw new Error(
+        `Failed to save messages to database: ${error.message ?? 'unknown'}`
+      )
     }
   }
 }

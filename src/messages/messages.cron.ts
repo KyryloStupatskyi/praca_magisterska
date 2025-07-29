@@ -16,7 +16,6 @@ export class MessagesCron {
     private eventEmitter: EventEmitter2
   ) {}
 
-  // Каждый 2 минуты
   @Cron('*/5 * * * * *')
   async saveMessagesToDatabase() {
     try {
@@ -28,16 +27,17 @@ export class MessagesCron {
       }
 
       const restoredArray = Object.values(messagesFromRedis).flat()
-      const messages = this.messagesService.bulkSaveMessages(restoredArray)
+      const messages =
+        await this.messagesService.bulkSaveMessages(restoredArray)
 
       const uniqueRoomIds = [...new Set(restoredArray.map((msg) => msg.roomId))]
-      //this.wssGateway.sendOriginalMessages(messages, uniqueRoomIds)
+      this.wssGateway.sendOriginalMessages(messages, uniqueRoomIds)
 
-      this.eventEmitter.emit(
-        'event-source.sendOriginalMessages',
-        messages,
-        uniqueRoomIds
-      )
+      //this.eventEmitter.emit(
+      //  'event-source.sendOriginalMessages',
+      //  messages,
+      //  uniqueRoomIds
+      //)
 
       // this.eventEmitter.emit(
       //   'longpolling.sendOriginalMessages',
